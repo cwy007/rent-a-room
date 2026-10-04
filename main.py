@@ -1,4 +1,4 @@
-from fastapi import FastAPI, status
+from fastapi import FastAPI, HTTPException, status
 
 app = FastAPI(
     title="Rent a Room API",
@@ -46,8 +46,8 @@ def get_rooms():
 
 
 @app.get("/rooms/{room_id}", status_code=status.HTTP_200_OK)
-def read_room(room_id: int):
+def get_room(room_id: int):
     for room in [apartment, house, studio]:
         if room["id"] == room_id:
             return room
-    return {"error": "Room not found"}
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Room not found")
