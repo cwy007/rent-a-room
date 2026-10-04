@@ -45,6 +45,22 @@ def get_rooms():
     return [apartment, house, studio]
 
 
+@app.get("/rooms/faq", status_code=status.HTTP_200_OK)
+def get_rooms_faq():
+    return {
+        "faq": [
+            {
+                "question": "How do I book a room?",
+                "answer": "You can book a room by selecting it and following the booking process.",
+            },
+            {
+                "question": "What is the cancellation policy?",
+                "answer": "You can cancel your booking up to 24 hours before check-in for a full refund.",
+            },
+        ]
+    }
+
+
 @app.get("/rooms/{room_id}", status_code=status.HTTP_200_OK)
 def get_room(room_id: int):
     for room in [apartment, house, studio]:
