@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import FastAPI, HTTPException, Query, status
 from fastapi.staticfiles import StaticFiles
-from pydantic import AfterValidator
+from pydantic import BaseModel, Field, field_validator
 
 app = FastAPI(
     title="Rent a Room API",
@@ -39,26 +39,23 @@ studio = {
     "bathrooms": 1,
 }
 
-search_query_validation = Query(
-    min_length=3,
-    max_length=10,
-    title="Search query",
-    description="Search term for room names",
-)
 
+class RoomQueryParams(BaseModel):
+    max_price: int | None = Field(default=None, ge=10, le=10_000)
+    search: str | None = Field(
+        default=None,
+        min_length=3,
+        max_length=10,
+        title="Search query",
+        description="Search term for room names",
+    )
 
-def fail_if_funny(value: str) -> str:
-    if "funny" in value.lower():
-        raise ValueError("Funny values are not allowed")
-    return value
-
-
-search_humor_ban_validation = AfterValidator(fail_if_funny)
-SearchQuery = Annotated[
-    str | None,
-    search_query_validation,
-    search_humor_ban_validation,
-]
+    @field_validator("search")
+    @classmethod
+    def validate_search(cls, value: str) -> str:
+        if value and "funny" in value.lower():
+            raise ValueError("Funny values are not allowed")
+        return value
 
 
 @app.get("/", status_code=status.HTTP_200_OK)
@@ -67,28 +64,26 @@ def root():
 
 
 @app.get("/rooms", status_code=status.HTTP_200_OK)
-def get_rooms(
-    max_price: Annotated[int | None, Query(ge=10, le=10_000)] = None,
-    search: SearchQuery = None,
-):
+def get_rooms(params: Annotated[RoomQueryParams, Query()]):
     rooms = [apartment, house, studio]
-    if search:
-        rooms = [room for room in rooms if search.lower() in room["name"].lower()]
-    if max_price is not None:
-        rooms = [room for room in rooms if room["price_per_night"] <= max_price]
+    if params.search:
+        rooms = [
+            room for room in rooms if params.search.lower() in room["name"].lower()
+        ]
+    if params.max_price is not None:
+        rooms = [room for room in rooms if room["price_per_night"] <= params.max_price]
     return rooms
 
 
 @app.get("/rooms/mansions", status_code=status.HTTP_200_OK)
-def get_mansions(
-    max_price: Annotated[int | None, Query(ge=10, le=10_000)] = None,
-    search: SearchQuery = None,
-):
+def get_mansions(params: RoomQueryParams):
     rooms = [house]
-    if search:
-        rooms = [room for room in rooms if search.lower() in room["name"].lower()]
-    if max_price is not None:
-        rooms = [room for room in rooms if room["price_per_night"] <= max_price]
+    if params.search:
+        rooms = [
+            room for room in rooms if params.search.lower() in room["name"].lower()
+        ]
+    if params.max_price is not None:
+        rooms = [room for room in rooms if room["price_per_night"] <= params.max_price]
     return rooms
 
 
