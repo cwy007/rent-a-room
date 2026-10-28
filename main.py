@@ -72,7 +72,14 @@ def root():
     return {"message": "Welcome to the Rent a Room API"}
 
 
-@app.get("/rooms", status_code=status.HTTP_200_OK, tags=["rooms"])
+@app.get(
+    "/rooms",
+    status_code=status.HTTP_200_OK,
+    tags=["rooms"],
+    summary="summary - 获取所有房间",
+    description="获取所有可用房间",
+    response_description="List of rooms",
+)
 def get_rooms(params: Annotated[RoomQueryParams, Query()]):
     rooms = [apartment, house, studio]
     if params.search:
@@ -82,7 +89,12 @@ def get_rooms(params: Annotated[RoomQueryParams, Query()]):
     return rooms
 
 
-@app.get("/rooms/mansions", status_code=status.HTTP_200_OK, tags=["rooms"])
+@app.get(
+    "/rooms/mansions",
+    status_code=status.HTTP_200_OK,
+    tags=["rooms"],
+    deprecated=True,
+)
 def get_mansions(params: Annotated[RoomQueryParams, Query()]):
     rooms = [house]
     if params.search:
