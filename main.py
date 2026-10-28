@@ -1,4 +1,6 @@
-from fastapi import FastAPI, HTTPException, status
+from typing import Annotated
+
+from fastapi import FastAPI, HTTPException, Query, status
 from fastapi.staticfiles import StaticFiles
 
 app = FastAPI(
@@ -43,7 +45,9 @@ def root():
 
 
 @app.get("/rooms", status_code=status.HTTP_200_OK)
-def get_rooms(search: str = "", max_price: int = 10_000):
+def get_rooms(
+    search: Annotated[str | None, Query(min_length=3)] = None, max_price: int = 10_000
+):
     rooms = [apartment, house, studio]
     if search:
         rooms = [room for room in rooms if search.lower() in room["name"].lower()]
