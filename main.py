@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import FastAPI, HTTPException, Query, status
 from fastapi.staticfiles import StaticFiles
+from pydantic import AfterValidator
 
 app = FastAPI(
     title="Rent a Room API",
@@ -44,10 +45,20 @@ def root():
     return {"message": "Welcome to the Rent a Room API"}
 
 
+def fail_if_funny(value: str) -> str:
+    if "funny" in value.lower():
+        raise ValueError("Funny values are not allowed")
+    return value
+
+
 @app.get("/rooms", status_code=status.HTTP_200_OK)
 def get_rooms(
     max_price: Annotated[int | None, Query(ge=10, le=10_000)] = None,
-    search: Annotated[str | None, Query(min_length=3, max_length=10)] = None,
+    search: Annotated[
+        str | None,
+        Query(min_length=3, max_length=10),
+        AfterValidator(fail_if_funny),
+    ] = None,
 ):
     rooms = [apartment, house, studio]
     if search:
