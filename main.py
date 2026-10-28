@@ -46,7 +46,8 @@ def root():
 
 @app.get("/rooms", status_code=status.HTTP_200_OK)
 def get_rooms(
-    search: Annotated[str | None, Query(min_length=3)] = None, max_price: int = 10_000
+    max_price: Annotated[int | None, Query(ge=10, le=10_000)] = None,
+    search: Annotated[str | None, Query(min_length=3, max_length=10)] = None,
 ):
     rooms = [apartment, house, studio]
     if search:
