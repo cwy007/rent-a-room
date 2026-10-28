@@ -56,7 +56,12 @@ def get_rooms(
     max_price: Annotated[int | None, Query(ge=10, le=10_000)] = None,
     search: Annotated[
         str | None,
-        Query(min_length=3, max_length=10),
+        Query(
+            min_length=3,
+            max_length=10,
+            title="Search query",
+            description="Search term for room names",
+        ),
         AfterValidator(fail_if_funny),
     ] = None,
 ):
