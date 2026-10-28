@@ -41,13 +41,14 @@ studio = {
 
 
 class RoomQueryParams(BaseModel):
-    max_price: int | None = Field(default=None, ge=10, le=10_000)
+    max_price: int | None = Field(default=None, ge=10, le=10_000, examples=[1000, 5000])
     search: Annotated[str | None, StringConstraints(to_lower=True)] = Field(
         default=None,
         min_length=3,
         max_length=10,
         title="Search query",
         description="Search term for room names",
+        examples=["cozy", "modern"],
     )
 
     @field_validator("search")
