@@ -39,10 +39,12 @@ studio = {
     "bathrooms": 1,
 }
 
-
-@app.get("/", status_code=status.HTTP_200_OK)
-def root():
-    return {"message": "Welcome to the Rent a Room API"}
+search_query_validation = Query(
+    min_length=3,
+    max_length=10,
+    title="Search query",
+    description="Search term for room names",
+)
 
 
 def fail_if_funny(value: str) -> str:
@@ -51,21 +53,41 @@ def fail_if_funny(value: str) -> str:
     return value
 
 
+search_humor_ban_validation = AfterValidator(fail_if_funny)
+
+
+@app.get("/", status_code=status.HTTP_200_OK)
+def root():
+    return {"message": "Welcome to the Rent a Room API"}
+
+
 @app.get("/rooms", status_code=status.HTTP_200_OK)
 def get_rooms(
     max_price: Annotated[int | None, Query(ge=10, le=10_000)] = None,
     search: Annotated[
         str | None,
-        Query(
-            min_length=3,
-            max_length=10,
-            title="Search query",
-            description="Search term for room names",
-        ),
-        AfterValidator(fail_if_funny),
+        search_query_validation,
+        search_humor_ban_validation,
     ] = None,
 ):
     rooms = [apartment, house, studio]
+    if search:
+        rooms = [room for room in rooms if search.lower() in room["name"].lower()]
+    if max_price is not None:
+        rooms = [room for room in rooms if room["price_per_night"] <= max_price]
+    return rooms
+
+
+@app.get("/rooms/mansions", status_code=status.HTTP_200_OK)
+def get_mansions(
+    max_price: Annotated[int | None, Query(ge=10, le=10_000)] = None,
+    search: Annotated[
+        str | None,
+        search_query_validation,
+        search_humor_ban_validation,
+    ] = None,
+):
+    rooms = [house]
     if search:
         rooms = [room for room in rooms if search.lower() in room["name"].lower()]
     if max_price is not None:
