@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import FastAPI, HTTPException, Query, status
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, StringConstraints, field_validator
 
 app = FastAPI(
     title="Rent a Room API",
@@ -42,7 +42,7 @@ studio = {
 
 class RoomQueryParams(BaseModel):
     max_price: int | None = Field(default=None, ge=10, le=10_000)
-    search: str | None = Field(
+    search: Annotated[str | None, StringConstraints(to_lower=True)] = Field(
         default=None,
         min_length=3,
         max_length=10,
@@ -67,21 +67,17 @@ def root():
 def get_rooms(params: Annotated[RoomQueryParams, Query()]):
     rooms = [apartment, house, studio]
     if params.search:
-        rooms = [
-            room for room in rooms if params.search.lower() in room["name"].lower()
-        ]
+        rooms = [room for room in rooms if params.search in room["name"].lower()]
     if params.max_price is not None:
         rooms = [room for room in rooms if room["price_per_night"] <= params.max_price]
     return rooms
 
 
 @app.get("/rooms/mansions", status_code=status.HTTP_200_OK)
-def get_mansions(params: RoomQueryParams):
+def get_mansions(params: Annotated[RoomQueryParams, Query()]):
     rooms = [house]
     if params.search:
-        rooms = [
-            room for room in rooms if params.search.lower() in room["name"].lower()
-        ]
+        rooms = [room for room in rooms if params.search in room["name"].lower()]
     if params.max_price is not None:
         rooms = [room for room in rooms if room["price_per_night"] <= params.max_price]
     return rooms
