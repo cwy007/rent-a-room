@@ -4,6 +4,13 @@ from fastapi import FastAPI, HTTPException, Query, status
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, StringConstraints, field_validator
 
+openapi_tags = [
+    {
+        "name": "rooms",
+        "description": "Operations related to rooms",
+    }
+]
+
 app = FastAPI(
     title="Rent a Room API",
     description="API for managing room rentals",
@@ -12,6 +19,7 @@ app = FastAPI(
         "name": "Support",
         "email": "support@rentaroom.com",
     },
+    openapi_tags=openapi_tags,
 )
 app.mount("/assets", StaticFiles(directory="assets"), name="assets")
 
@@ -64,7 +72,7 @@ def root():
     return {"message": "Welcome to the Rent a Room API"}
 
 
-@app.get("/rooms", status_code=status.HTTP_200_OK)
+@app.get("/rooms", status_code=status.HTTP_200_OK, tags=["rooms"])
 def get_rooms(params: Annotated[RoomQueryParams, Query()]):
     rooms = [apartment, house, studio]
     if params.search:
@@ -74,7 +82,7 @@ def get_rooms(params: Annotated[RoomQueryParams, Query()]):
     return rooms
 
 
-@app.get("/rooms/mansions", status_code=status.HTTP_200_OK)
+@app.get("/rooms/mansions", status_code=status.HTTP_200_OK, tags=["rooms"])
 def get_mansions(params: Annotated[RoomQueryParams, Query()]):
     rooms = [house]
     if params.search:
@@ -84,7 +92,7 @@ def get_mansions(params: Annotated[RoomQueryParams, Query()]):
     return rooms
 
 
-@app.get("/rooms/faq", status_code=status.HTTP_200_OK)
+@app.get("/rooms/faq", status_code=status.HTTP_200_OK, tags=["rooms"])
 def get_rooms_faq():
     return {
         "faq": [
@@ -100,7 +108,7 @@ def get_rooms_faq():
     }
 
 
-@app.get("/rooms/{room_id}", status_code=status.HTTP_200_OK)
+@app.get("/rooms/{room_id}", status_code=status.HTTP_200_OK, tags=["rooms"])
 def get_room(room_id: int):
     for room in [apartment, house, studio]:
         if room["id"] == room_id:
