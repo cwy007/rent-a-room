@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import FastAPI, HTTPException, Query, status
+from fastapi import FastAPI, HTTPException, Query, Response, status
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, StringConstraints, field_validator
 
@@ -126,3 +126,10 @@ def get_room(room_id: int):
         if room["id"] == room_id:
             return room
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Room not found")
+
+
+@app.get("/preferences", status_code=status.HTTP_200_OK, tags=["preferences"])
+def set_preferences(response: Response):
+    response.set_cookie(key="theme", value="dark")
+    response.set_cookie(key="language", value="en")
+    return {"message": "Preferences updated"}
