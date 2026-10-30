@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import FastAPI, HTTPException, Query, Response, status
+from fastapi import Cookie, FastAPI, HTTPException, Query, Response, status
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, StringConstraints, field_validator
 
@@ -68,8 +68,13 @@ class RoomQueryParams(BaseModel):
 
 
 @app.get("/", status_code=status.HTTP_200_OK)
-def root():
-    return {"message": "Welcome to the Rent a Room API"}
+def root(language: Annotated[str | None, Cookie()] = None):
+    greetings = {
+        "en": "Welcome to Rent a Room",
+        "es": "Bienvenido a Rent a Room",
+        "fr": "Bienvenue à Rent a Room",
+    }
+    return {"message": greetings.get(language, greetings["en"]), "language": language}
 
 
 @app.get(
