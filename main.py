@@ -53,6 +53,10 @@ class AppCookies(BaseModel):
     language: Literal["en", "es", "fr"] = "en"
 
 
+class AppHeaders(BaseModel):
+    user_agent: str | None = None
+
+
 class RoomQueryParams(BaseModel):
     max_price: int | None = Field(default=None, ge=10, le=10_000, examples=[1000, 5000])
     search: Annotated[str | None, StringConstraints(to_lower=True)] = Field(
@@ -75,7 +79,7 @@ class RoomQueryParams(BaseModel):
 @app.get("/", status_code=status.HTTP_200_OK)
 def root(
     app_cookies: Annotated[AppCookies, Cookie()] = None,
-    user_agent: Annotated[str | None, Header()] = None,
+    app_headers: Annotated[AppHeaders, Header()] = None,
 ):
     greetings = {
         "en": "Welcome to Rent a Room",
@@ -86,7 +90,8 @@ def root(
     return {
         "message": greetings.get(language),
         "language": language,
-        "user_agent": user_agent,
+        "user_agent": app_headers.user_agent if app_headers else None,
+        "app_headers": app_headers.model_dump() if app_headers else None,
     }
 
 
