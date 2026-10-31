@@ -79,6 +79,9 @@ class RoomQueryParams(BaseModel):
         return value
 
 
+RoomId = Annotated[int, Path(ge=1, description="The ID of the room to retrieve")]
+
+
 @app.get("/", status_code=status.HTTP_200_OK)
 def root(
     app_cookies: Annotated[AppCookies, Cookie()],
@@ -134,14 +137,27 @@ def get_rooms(session: SessionDep, params: Annotated[RoomQueryParams, Query()]):
 
 
 @app.get("/rooms/{room_id}", status_code=status.HTTP_200_OK, tags=["rooms"])
-def get_room(
-    session: SessionDep,
-    room_id: Annotated[int, Path(description="The ID of the room to retrieve")],
-) -> Room:
+def get_room(session: SessionDep, room_id: RoomId) -> Room:
     room = session.get(Room, room_id)
     if room:
         return room
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Room not found")
+
+
+@app.patch("/rooms/{room_id}", status_code=status.HTTP_200_OK, tags=["rooms"])
+def update_room(session: SessionDep, room_id: RoomId, room: Room) -> Room:
+    existing_room = session.get(Room, room_id)
+    if not existing_room:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Room not found"
+        )
+    # for key, value in room.model_dump().items():
+    #     setattr(existing_room, key, value)
+    existing_room.sqlmodel_update(room)
+    session.add(existing_room)
+    session.commit()
+    session.refresh(existing_room)
+    return existing_room
 
 
 @app.get("/preferences", status_code=status.HTTP_200_OK, tags=["preferences"])
