@@ -7,6 +7,7 @@ from fastapi import (
     FastAPI,
     Header,
     HTTPException,
+    Path,
     Query,
     Response,
     status,
@@ -133,7 +134,10 @@ def get_rooms(session: SessionDep, params: Annotated[RoomQueryParams, Query()]):
 
 
 @app.get("/rooms/{room_id}", status_code=status.HTTP_200_OK, tags=["rooms"])
-def get_room(room_id: int, session: SessionDep):
+def get_room(
+    session: SessionDep,
+    room_id: Annotated[int, Path(description="The ID of the room to retrieve")],
+) -> Room:
     room = session.get(Room, room_id)
     if room:
         return room
