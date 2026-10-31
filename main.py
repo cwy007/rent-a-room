@@ -1,8 +1,11 @@
+from contextlib import asynccontextmanager
 from typing import Annotated, Literal
 
 from fastapi import Cookie, FastAPI, Header, HTTPException, Query, Response, status
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, StringConstraints, field_validator
+
+from database import create_db_and_tables
 
 openapi_tags = [
     {
@@ -11,7 +14,17 @@ openapi_tags = [
     }
 ]
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # 启动前
+    create_db_and_tables()
+    yield
+    # 关闭后
+
+
 app = FastAPI(
+    lifespan=lifespan,
     title="Rent a Room API",
     description="API for managing room rentals",
     version="1.0.0",
