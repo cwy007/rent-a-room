@@ -16,6 +16,7 @@ from pydantic import BaseModel, Field, StringConstraints, field_validator
 from sqlmodel import select
 
 from database import SessionDep, create_db_and_tables
+from models import Room
 
 openapi_tags = [
     {
@@ -120,6 +121,14 @@ def root(
         "app_headers": app_headers.model_dump() if app_headers else None,
         "db_result": db_result,
     }
+
+
+@app.post("/rooms", status_code=status.HTTP_201_CREATED, tags=["rooms"])
+def create_room(session: SessionDep, room: Room) -> Room:
+    session.add(room)
+    session.commit()
+    session.refresh(room)
+    return room
 
 
 @app.get(
