@@ -47,30 +47,6 @@ app = FastAPI(
 )
 app.mount("/assets", StaticFiles(directory="assets"), name="assets")
 
-apartment = {
-    "id": 1,
-    "name": "Cozy Apartment",
-    "price_per_night": 1200,
-    "bedrooms": 2,
-    "bathrooms": 1,
-}
-
-house = {
-    "id": 2,
-    "name": "Spacious House",
-    "price_per_night": 2500,
-    "bedrooms": 4,
-    "bathrooms": 3,
-}
-
-studio = {
-    "id": 3,
-    "name": "Modern Studio",
-    "price_per_night": 900,
-    "bedrooms": 1,
-    "bathrooms": 1,
-}
-
 
 class AppCookies(BaseModel):
     theme: Literal["light", "dark"] = "dark"
@@ -139,12 +115,12 @@ def create_room(session: SessionDep, room: Room) -> Room:
     description="获取所有可用房间",
     response_description="List of rooms",
 )
-def get_rooms(params: Annotated[RoomQueryParams, Query()]):
-    rooms = [apartment, house, studio]
+def get_rooms(session: SessionDep, params: Annotated[RoomQueryParams, Query()]):
+    rooms = session.exec(select(Room)).all()
     if params.search:
-        rooms = [room for room in rooms if params.search in room["name"].lower()]
+        rooms = [room for room in rooms if params.search in room.name.lower()]
     if params.max_price is not None:
-        rooms = [room for room in rooms if room["price_per_night"] <= params.max_price]
+        rooms = [room for room in rooms if room.price_per_night <= params.max_price]
     return rooms
 
 
@@ -154,12 +130,12 @@ def get_rooms(params: Annotated[RoomQueryParams, Query()]):
     tags=["rooms"],
     deprecated=True,
 )
-def get_mansions(params: Annotated[RoomQueryParams, Query()]):
-    rooms = [house]
+def get_mansions(session: SessionDep, params: Annotated[RoomQueryParams, Query()]):
+    rooms = session.exec(select(Room).where(Room.type == "house")).all()
     if params.search:
-        rooms = [room for room in rooms if params.search in room["name"].lower()]
+        rooms = [room for room in rooms if params.search in room.name.lower()]
     if params.max_price is not None:
-        rooms = [room for room in rooms if room["price_per_night"] <= params.max_price]
+        rooms = [room for room in rooms if room.price_per_night <= params.max_price]
     return rooms
 
 
@@ -180,10 +156,10 @@ def get_rooms_faq():
 
 
 @app.get("/rooms/{room_id}", status_code=status.HTTP_200_OK, tags=["rooms"])
-def get_room(room_id: int):
-    for room in [apartment, house, studio]:
-        if room["id"] == room_id:
-            return room
+def get_room(room_id: int, session: SessionDep):
+    room = session.get(Room, room_id)
+    if room:
+        return room
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Room not found")
 
 
