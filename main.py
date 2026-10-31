@@ -125,37 +125,6 @@ def get_rooms(session: SessionDep, params: Annotated[RoomQueryParams, Query()]):
     return session.exec(statement).all()
 
 
-@app.get(
-    "/rooms/mansions",
-    status_code=status.HTTP_200_OK,
-    tags=["rooms"],
-    deprecated=True,
-)
-def get_mansions(session: SessionDep, params: Annotated[RoomQueryParams, Query()]):
-    rooms = session.exec(select(Room).where(Room.type == "house")).all()
-    if params.search:
-        rooms = [room for room in rooms if params.search in room.name.lower()]
-    if params.max_price is not None:
-        rooms = [room for room in rooms if room.price_per_night <= params.max_price]
-    return rooms
-
-
-@app.get("/rooms/faq", status_code=status.HTTP_200_OK, tags=["rooms"])
-def get_rooms_faq():
-    return {
-        "faq": [
-            {
-                "question": "How do I book a room?",
-                "answer": "You can book a room by selecting it and following the booking process.",
-            },
-            {
-                "question": "What is the cancellation policy?",
-                "answer": "You can cancel your booking up to 24 hours before check-in for a full refund.",
-            },
-        ]
-    }
-
-
 @app.get("/rooms/{room_id}", status_code=status.HTTP_200_OK, tags=["rooms"])
 def get_room(room_id: int, session: SessionDep):
     room = session.get(Room, room_id)
