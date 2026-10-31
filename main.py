@@ -1,7 +1,16 @@
 from contextlib import asynccontextmanager
 from typing import Annotated, Literal
 
-from fastapi import Cookie, FastAPI, Header, HTTPException, Query, Response, status
+from fastapi import (
+    Cookie,
+    Depends,
+    FastAPI,
+    Header,
+    HTTPException,
+    Query,
+    Response,
+    status,
+)
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, StringConstraints, field_validator
 
@@ -170,3 +179,12 @@ def set_preferences(response: Response):
     response.set_cookie(key="theme", value=app_cookies.theme)
     response.set_cookie(key="language", value=app_cookies.language)
     return {"message": "Preferences updated"}
+
+
+def get_number():
+    return 42
+
+
+@app.get("/example")
+def fake_route(number: Annotated[int, Depends(get_number)]):
+    return {"number": number}
