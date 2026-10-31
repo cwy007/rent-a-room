@@ -13,7 +13,7 @@ from fastapi import (
 )
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, StringConstraints, field_validator
-from sqlmodel import select
+from sqlmodel import col, func, or_, select
 
 from database import SessionDep, create_db_and_tables
 from models import Room
@@ -116,12 +116,13 @@ def create_room(session: SessionDep, room: Room) -> Room:
     response_description="List of rooms",
 )
 def get_rooms(session: SessionDep, params: Annotated[RoomQueryParams, Query()]):
-    rooms = session.exec(select(Room)).all()
+    statement = select(Room)
+    if params.max_price:
+        statement = statement.where(Room.price_per_night <= params.max_price)
     if params.search:
-        rooms = [room for room in rooms if params.search in room.name.lower()]
-    if params.max_price is not None:
-        rooms = [room for room in rooms if room.price_per_night <= params.max_price]
-    return rooms
+        # statement = statement.where(func.lower(Room.name).contains(params.search))
+        statement = statement.where(col(Room.name).ilike(f"%{params.search}%"))
+    return session.exec(statement).all()
 
 
 @app.get(
