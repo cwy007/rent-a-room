@@ -13,8 +13,9 @@ from fastapi import (
 )
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, StringConstraints, field_validator
+from sqlmodel import select
 
-from database import create_db_and_tables
+from database import SessionDep, create_db_and_tables
 
 openapi_tags = [
     {
@@ -100,9 +101,12 @@ class RoomQueryParams(BaseModel):
 
 @app.get("/", status_code=status.HTTP_200_OK)
 def root(
-    app_cookies: Annotated[AppCookies, Cookie()] = None,
-    app_headers: Annotated[AppHeaders, Header()] = None,
+    app_cookies: Annotated[AppCookies, Cookie()],
+    app_headers: Annotated[AppHeaders, Header()],
+    session: SessionDep,
 ):
+    db_result = session.exec(select(5)).one()
+
     greetings = {
         "en": "Welcome to Rent a Room",
         "es": "Bienvenido a Rent a Room",
@@ -114,6 +118,7 @@ def root(
         "language": language,
         "user_agent": app_headers.user_agent if app_headers else None,
         "app_headers": app_headers.model_dump() if app_headers else None,
+        "db_result": db_result,
     }
 
 
