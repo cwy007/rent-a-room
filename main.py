@@ -67,6 +67,8 @@ class RoomQueryParams(BaseModel):
         description="Search term for room names",
         examples=["cozy", "modern"],
     )
+    limit: int = Field(default=10, ge=1, le=100)
+    offset: int = Field(default=0, ge=0)
 
     @field_validator("search")
     @classmethod
@@ -117,11 +119,16 @@ def create_room(session: SessionDep, room: Room) -> Room:
 )
 def get_rooms(session: SessionDep, params: Annotated[RoomQueryParams, Query()]):
     statement = select(Room)
+
     if params.max_price:
         statement = statement.where(Room.price_per_night <= params.max_price)
+
     if params.search:
         # statement = statement.where(func.lower(Room.name).contains(params.search))
         statement = statement.where(col(Room.name).ilike(f"%{params.search}%"))
+
+    statement = statement.limit(params.limit).offset(params.offset).order_by(Room.id)
+
     return session.exec(statement).all()
 
 
