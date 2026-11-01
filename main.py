@@ -160,6 +160,18 @@ def update_room(session: SessionDep, room_id: RoomId, room: Room) -> Room:
     return existing_room
 
 
+@app.delete("/rooms/{room_id}", status_code=status.HTTP_200_OK, tags=["rooms"])
+def delete_room(session: SessionDep, room_id: RoomId):
+    existing_room = session.get(Room, room_id)
+    if not existing_room:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Room not found"
+        )
+    session.delete(existing_room)
+    session.commit()
+    return {"message": "Room deleted", "room": existing_room}
+
+
 @app.get("/preferences", status_code=status.HTTP_200_OK, tags=["preferences"])
 def set_preferences(response: Response):
     app_cookies = AppCookies()
