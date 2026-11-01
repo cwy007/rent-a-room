@@ -82,6 +82,18 @@ class RoomQueryParams(BaseModel):
 RoomId = Annotated[int, Path(ge=1, description="The ID of the room to retrieve")]
 
 
+def get_room_or_404(session: SessionDep, room_id: RoomId) -> Room:
+    room = session.get(Room, room_id)
+    if not room:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Room not found"
+        )
+    return room
+
+
+RoomDep = Annotated[Room, Depends(get_room_or_404)]
+
+
 @app.get("/", status_code=status.HTTP_200_OK)
 def root(
     app_cookies: Annotated[AppCookies, Cookie()],
@@ -149,11 +161,8 @@ def get_rooms(session: SessionDep, params: Annotated[RoomQueryParams, Query()]):
     response_model=RoomPublic,
     tags=["rooms"],
 )
-def get_room(session: SessionDep, room_id: RoomId):
-    room = session.get(Room, room_id)
-    if room:
-        return room
-    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Room not found")
+def get_room(room: RoomDep):
+    return room
 
 
 @app.patch(
@@ -162,20 +171,13 @@ def get_room(session: SessionDep, room_id: RoomId):
     response_model=RoomPublic,
     tags=["rooms"],
 )
-def update_room(session: SessionDep, room_id: RoomId, room: RoomUpdate):
-    existing_room = session.get(Room, room_id)
-    if not existing_room:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Room not found"
-        )
-    # for key, value in room.model_dump().items():
-    #     setattr(existing_room, key, value)
-    room_data = room.model_dump(exclude_unset=True)
-    existing_room.sqlmodel_update(room_data)
-    session.add(existing_room)
+def update_room(session: SessionDep, room: RoomDep, room_payload: RoomUpdate):
+    room_payload_data = room_payload.model_dump(exclude_unset=True)
+    room.sqlmodel_update(room_payload_data)
+    session.add(room)
     session.commit()
-    session.refresh(existing_room)
-    return existing_room
+    session.refresh(room)
+    return room
 
 
 @app.delete(
@@ -184,15 +186,10 @@ def update_room(session: SessionDep, room_id: RoomId, room: RoomUpdate):
     response_model=RoomPublic,
     tags=["rooms"],
 )
-def delete_room(session: SessionDep, room_id: RoomId):
-    existing_room = session.get(Room, room_id)
-    if not existing_room:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Room not found"
-        )
-    session.delete(existing_room)
+def delete_room(session: SessionDep, room: RoomDep):
+    session.delete(room)
     session.commit()
-    return existing_room
+    return room
 
 
 @app.get("/preferences", status_code=status.HTTP_200_OK, tags=["preferences"])
