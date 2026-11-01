@@ -17,7 +17,7 @@ from pydantic import BaseModel, Field, StringConstraints, field_validator
 from sqlmodel import col, func, or_, select
 
 from database import SessionDep, create_db_and_tables
-from models import Room, RoomBase, RoomPublic
+from models import Room, RoomBase, RoomPublic, RoomUpdate
 
 openapi_tags = [
     {
@@ -156,8 +156,13 @@ def get_room(session: SessionDep, room_id: RoomId):
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Room not found")
 
 
-@app.patch("/rooms/{room_id}", status_code=status.HTTP_200_OK, tags=["rooms"])
-def update_room(session: SessionDep, room_id: RoomId, room: Room) -> Room:
+@app.patch(
+    "/rooms/{room_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=RoomPublic,
+    tags=["rooms"],
+)
+def update_room(session: SessionDep, room_id: RoomId, room: RoomUpdate):
     existing_room = session.get(Room, room_id)
     if not existing_room:
         raise HTTPException(
@@ -165,14 +170,20 @@ def update_room(session: SessionDep, room_id: RoomId, room: Room) -> Room:
         )
     # for key, value in room.model_dump().items():
     #     setattr(existing_room, key, value)
-    existing_room.sqlmodel_update(room)
+    room_data = room.model_dump(exclude_unset=True)
+    existing_room.sqlmodel_update(room_data)
     session.add(existing_room)
     session.commit()
     session.refresh(existing_room)
     return existing_room
 
 
-@app.delete("/rooms/{room_id}", status_code=status.HTTP_200_OK, tags=["rooms"])
+@app.delete(
+    "/rooms/{room_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=RoomPublic,
+    tags=["rooms"],
+)
 def delete_room(session: SessionDep, room_id: RoomId):
     existing_room = session.get(Room, room_id)
     if not existing_room:
@@ -181,7 +192,7 @@ def delete_room(session: SessionDep, room_id: RoomId):
         )
     session.delete(existing_room)
     session.commit()
-    return {"message": "Room deleted", "room": existing_room}
+    return existing_room
 
 
 @app.get("/preferences", status_code=status.HTTP_200_OK, tags=["preferences"])
