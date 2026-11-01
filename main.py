@@ -122,6 +122,7 @@ def create_room(session: SessionDep, room: RoomBase) -> RoomPublic:
 @app.get(
     "/rooms",
     status_code=status.HTTP_200_OK,
+    response_model=list[RoomPublic],
     tags=["rooms"],
     summary="summary - 获取所有房间",
     description="获取所有可用房间",
@@ -142,8 +143,13 @@ def get_rooms(session: SessionDep, params: Annotated[RoomQueryParams, Query()]):
     return session.exec(statement).all()
 
 
-@app.get("/rooms/{room_id}", status_code=status.HTTP_200_OK, tags=["rooms"])
-def get_room(session: SessionDep, room_id: RoomId) -> Room:
+@app.get(
+    "/rooms/{room_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=RoomPublic,
+    tags=["rooms"],
+)
+def get_room(session: SessionDep, room_id: RoomId):
     room = session.get(Room, room_id)
     if room:
         return room
