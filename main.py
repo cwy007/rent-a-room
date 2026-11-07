@@ -16,8 +16,8 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, StringConstraints, field_validator
 from sqlmodel import col, func, or_, select
 
-from database import SessionDep, create_db_and_tables
-from models import Room, RoomBase, RoomPublic, RoomUpdate
+from app.dependencies.database import SessionDep, create_db_and_tables
+from app.models.room import Room, RoomBase, RoomPublic, RoomUpdate
 
 openapi_tags = [
     {
