@@ -54,9 +54,8 @@ RoomDep = Annotated[Room, Depends(get_room_or_404)]
 
 
 @router.post(
-    "/rooms",
+    "/",
     status_code=status.HTTP_201_CREATED,
-    tags=["rooms"],
     response_model=RoomPublic,
 )
 def create_room(session: SessionDep, room: RoomBase) -> RoomPublic:
@@ -68,10 +67,9 @@ def create_room(session: SessionDep, room: RoomBase) -> RoomPublic:
 
 
 @router.get(
-    "/rooms",
+    "/",
     status_code=status.HTTP_200_OK,
     response_model=list[RoomPublic],
-    tags=["rooms"],
     summary="summary - 获取所有房间",
     description="获取所有可用房间",
     response_description="List of rooms",
@@ -92,20 +90,18 @@ def get_rooms(session: SessionDep, params: Annotated[RoomQueryParams, Query()]):
 
 
 @router.get(
-    "/rooms/{room_id}",
+    "/{room_id}",
     status_code=status.HTTP_200_OK,
     response_model=RoomPublic,
-    tags=["rooms"],
 )
 def get_room(room: RoomDep):
     return room
 
 
 @router.patch(
-    "/rooms/{room_id}",
+    "/{room_id}",
     status_code=status.HTTP_200_OK,
     response_model=RoomPublic,
-    tags=["rooms"],
 )
 def update_room(session: SessionDep, room: RoomDep, room_payload: RoomUpdate):
     room_payload_data = room_payload.model_dump(exclude_unset=True)
@@ -117,10 +113,9 @@ def update_room(session: SessionDep, room: RoomDep, room_payload: RoomUpdate):
 
 
 @router.delete(
-    "/rooms/{room_id}",
+    "/{room_id}",
     status_code=status.HTTP_200_OK,
     response_model=RoomPublic,
-    tags=["rooms"],
 )
 def delete_room(session: SessionDep, room: RoomDep):
     session.delete(room)
