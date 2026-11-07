@@ -1,6 +1,6 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 
 from app.dependencies.database import create_db_and_tables
@@ -14,6 +14,10 @@ openapi_tags = [
 ]
 
 
+def log_request(request: Request):
+    print(f"{request.method} / {request.url.path}")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # 启动前
@@ -24,6 +28,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     lifespan=lifespan,
+    dependencies=[Depends(log_request)],  # 全局依赖
     title="Rent a Room API",
     description="API for managing room rentals",
     version="1.0.0",
