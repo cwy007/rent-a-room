@@ -1,22 +1,25 @@
 from typing import Annotated
 
 from fastapi import Depends
-from sqlmodel import Session, SQLModel, create_engine
+from sqlalchemy.ext.asyncio import create_async_engine
+from sqlmodel import Session, SQLModel
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 import app.models.room
 
 sqlite_file_name = "database.db"
-sqlite_url = f"sqlite:///{sqlite_file_name}"
+sqlite_url = f"sqlite+aiosqlite:///{sqlite_file_name}"
 
-engine = create_engine(sqlite_url, connect_args={"check_same_thread": False}, echo=True)
-
-
-def create_db_and_tables():
-    SQLModel.metadata.create_all(engine)
+engine = create_async_engine(sqlite_url, echo=True)
 
 
-def get_session():
-    with Session(engine) as session:
+async def create_db_and_tables():
+    async with engine.begin() as conn:
+        await conn.run_sync(SQLModel.metadata.create_all)
+
+
+async def get_session():
+    async with AsyncSession(engine) as session:
         yield session
 
 
