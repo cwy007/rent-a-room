@@ -21,7 +21,7 @@ def log_request(request: Request):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # 启动前
-    create_db_and_tables()
+    await create_db_and_tables()
     yield
     # 关闭后
 
