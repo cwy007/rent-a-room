@@ -41,8 +41,8 @@ class RoomQueryParams(BaseModel):
 RoomId = Annotated[int, Path(ge=1, description="The ID of the room to retrieve")]
 
 
-def get_room_or_404(session: SessionDep, room_id: RoomId) -> Room:
-    room = session.get(Room, room_id)
+async def get_room_or_404(session: SessionDep, room_id: RoomId) -> Room:
+    room = await session.get(Room, room_id)
     if not room:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Room not found"
@@ -68,14 +68,14 @@ def check_maintenance_mode():
     response_model=RoomPublic,
     dependencies=[Depends(check_maintenance_mode)],
 )
-def create_room(
+async def create_room(
     session: SessionDep,
     room: RoomBase,
 ):
     validated_room = Room.model_validate(room)
     session.add(validated_room)
-    session.commit()
-    session.refresh(validated_room)
+    await session.commit()
+    await session.refresh(validated_room)
     return validated_room
 
 
@@ -87,7 +87,7 @@ def create_room(
     description="获取所有可用房间",
     response_description="List of rooms",
 )
-def get_rooms(session: SessionDep, params: Annotated[RoomQueryParams, Query()]):
+async def get_rooms(session: SessionDep, params: Annotated[RoomQueryParams, Query()]):
     statement = select(Room)
 
     if params.max_price:
@@ -98,8 +98,8 @@ def get_rooms(session: SessionDep, params: Annotated[RoomQueryParams, Query()]):
         statement = statement.where(col(Room.name).ilike(f"%{params.search}%"))
 
     statement = statement.limit(params.limit).offset(params.offset).order_by(Room.id)
-
-    return session.exec(statement).all()
+    result = await session.exec(statement)
+    return result.all()
 
 
 @router.get(
@@ -107,7 +107,7 @@ def get_rooms(session: SessionDep, params: Annotated[RoomQueryParams, Query()]):
     status_code=status.HTTP_200_OK,
     response_model=RoomPublic,
 )
-def get_room(room: RoomDep):
+async def get_room(room: RoomDep):
     return room
 
 
@@ -117,12 +117,12 @@ def get_room(room: RoomDep):
     response_model=RoomPublic,
     dependencies=[Depends(check_maintenance_mode)],
 )
-def update_room(session: SessionDep, room: RoomDep, room_payload: RoomUpdate):
+async def update_room(session: SessionDep, room: RoomDep, room_payload: RoomUpdate):
     room_payload_data = room_payload.model_dump(exclude_unset=True)
     room.sqlmodel_update(room_payload_data)
     session.add(room)
-    session.commit()
-    session.refresh(room)
+    await session.commit()
+    await session.refresh(room)
     return room
 
 
@@ -132,7 +132,7 @@ def update_room(session: SessionDep, room: RoomDep, room_payload: RoomUpdate):
     response_model=RoomPublic,
     dependencies=[Depends(check_maintenance_mode)],
 )
-def delete_room(session: SessionDep, room: RoomDep):
+async def delete_room(session: SessionDep, room: RoomDep):
     session.delete(room)
-    session.commit()
+    await session.commit()
     return room

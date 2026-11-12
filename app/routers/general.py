@@ -19,12 +19,13 @@ class AppHeaders(BaseModel):
 
 
 @router.get("/", status_code=status.HTTP_200_OK)
-def root(
+async def root(
     app_cookies: Annotated[AppCookies, Cookie()],
     app_headers: Annotated[AppHeaders, Header()],
     session: SessionDep,
 ):
-    db_result = session.exec(select(5)).one()
+    db_result = await session.exec(select(5))
+    db_result = db_result.one()
 
     greetings = {
         "en": "Welcome to Rent a Room",
