@@ -1,6 +1,10 @@
 from datetime import datetime
+from typing import TYPE_CHECKING
 
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, Relationship, SQLModel
+
+if TYPE_CHECKING:
+    from app.models.room import Room
 
 
 class BookingBase(SQLModel):
@@ -15,6 +19,8 @@ class Booking(BookingBase, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     room_id: int = Field(foreign_key="rooms.id")
+
+    room: "Room" = Relationship(back_populates="bookings")
 
 
 class BookingPublic(BookingBase):

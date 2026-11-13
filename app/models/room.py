@@ -1,4 +1,11 @@
-from sqlmodel import Field, SQLModel
+from typing import TYPE_CHECKING
+
+from sqlmodel import Field, Relationship, SQLModel
+
+from app.models.booking import Booking
+
+if TYPE_CHECKING:
+    from app.models.booking import Booking
 
 
 # 基础模型类，用于定义房间的公共属性
@@ -14,6 +21,8 @@ class Room(RoomBase, table=True):
     __tablename__: str = "rooms"
 
     id: int | None = Field(default=None, primary_key=True)
+
+    bookings: list["Booking"] = Relationship(back_populates="room")
 
 
 # 房间响应模型 - 用于返回给客户端的房间信息
