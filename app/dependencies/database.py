@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from sqlmodel import Session, SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+import app.models.booking
 import app.models.room
 
 sqlite_file_name = "database.db"
