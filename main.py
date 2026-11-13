@@ -44,5 +44,5 @@ app = FastAPI(
 )
 app.include_router(general.router)
 app.include_router(rooms.router, prefix="/rooms", tags=["rooms"])
-app.include_router(bookings.router, prefix="/bookings", tags=["bookings"])
+app.include_router(bookings.router)
 app.mount("/assets", StaticFiles(directory="assets"), name="assets")
