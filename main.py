@@ -4,13 +4,17 @@ from fastapi import Depends, FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 
 from app.dependencies.database import create_db_and_tables
-from app.routers import general, rooms
+from app.routers import bookings, general, rooms
 
 openapi_tags = [
     {
         "name": "rooms",
         "description": "Operations related to rooms",
-    }
+    },
+    {
+        "name": "bookings",
+        "description": "Operations related to bookings",
+    },
 ]
 
 
@@ -40,4 +44,5 @@ app = FastAPI(
 )
 app.include_router(general.router)
 app.include_router(rooms.router, prefix="/rooms", tags=["rooms"])
+app.include_router(bookings.router, prefix="/bookings", tags=["bookings"])
 app.mount("/assets", StaticFiles(directory="assets"), name="assets")
