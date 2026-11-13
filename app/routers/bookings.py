@@ -10,6 +10,7 @@ from app.models.booking import (
     BookingUpdate,
 )
 from app.models.room import Room
+from app.models.user import User
 
 router = APIRouter(prefix="/bookings", tags=["bookings"])
 
@@ -20,6 +21,11 @@ async def create_booking(session: SessionDep, booking: BookingBase):
     if not room:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Room not found"
+        )
+    user = await session.get(User, booking.user_id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
     validated_booking = Booking.model_validate(booking)
     session.add(validated_booking)

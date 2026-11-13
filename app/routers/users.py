@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Path, status
+from sqlmodel import select
 
 from app.dependencies.database import SessionDep
 from app.dependencies.users import UserDep, UserId
@@ -15,6 +16,12 @@ async def create_user(session: SessionDep, user: UserBase):
     await session.commit()
     await session.refresh(new_user)
     return new_user
+
+
+@router.get("/", status_code=status.HTTP_200_OK, response_model=list[UserPublic])
+async def get_users(session: SessionDep):
+    users = await session.exec(select(User))
+    return users.all()
 
 
 @router.get("/{user_id}", status_code=status.HTTP_200_OK, response_model=UserPublic)
