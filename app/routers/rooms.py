@@ -14,7 +14,7 @@ from app.dependencies.database import SessionDep
 from app.dependencies.rooms import RoomDep
 from app.models.room import Room, RoomBase, RoomPublic, RoomUpdate
 
-router = APIRouter()
+router = APIRouter(prefix="/rooms", tags=["rooms"])
 
 
 class RoomQueryParams(BaseModel):
