@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from sqlmodel import Field, Relationship, SQLModel
 
@@ -19,15 +19,20 @@ class Booking(BookingBase, table=True):
     __tablename__: str = "bookings"
 
     id: int | None = Field(default=None, primary_key=True)
-    room_id: int = Field(foreign_key="rooms.id", ondelete="CASCADE")
+    room_id: int | None = Field(
+        foreign_key="rooms.id",
+        # ondelete="CASCADE"
+        ondelete="SET NULL",
+    )
     user_id: int = Field(foreign_key="users.id")
 
-    room: "Room" = Relationship(back_populates="bookings")
+    room: Optional["Room"] = Relationship(back_populates="bookings")
     user: "User" = Relationship(back_populates="bookings")
 
 
 class BookingPublic(BookingBase):
     id: int
+    room_id: int | None
 
 
 class BookingUpdate(SQLModel):
