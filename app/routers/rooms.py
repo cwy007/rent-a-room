@@ -7,11 +7,12 @@ from fastapi import (
     status,
 )
 from pydantic import BaseModel, Field, StringConstraints, field_validator
-from sqlmodel import col, select
+from sqlmodel import col, exists, select
 
 from app.dependencies.database import SessionDep
 from app.dependencies.rooms import RoomDep
 from app.errors import SERVICE_UNAVAILABLE
+from app.models.booking import Booking
 from app.models.room import Room, RoomBase, RoomPublic, RoomUpdate
 
 router = APIRouter(prefix="/rooms", tags=["rooms"])
@@ -82,6 +83,15 @@ async def get_rooms(session: SessionDep, params: Annotated[RoomQueryParams, Quer
         statement = statement.where(col(Room.name).ilike(f"%{params.search}%"))
 
     statement = statement.limit(params.limit).offset(params.offset).order_by(Room.id)
+    result = await session.exec(statement)
+    return result.all()
+
+
+@router.get("/booked", status_code=status.HTTP_200_OK, response_model=list[RoomPublic])
+async def get_booked_rooms(session: SessionDep):
+    statement = select(Room).where(
+        exists(select(Booking).where(Booking.room_id == Room.id))
+    )
     result = await session.exec(statement)
     return result.all()
 
