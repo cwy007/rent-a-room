@@ -97,6 +97,17 @@ async def get_booked_rooms(session: SessionDep):
 
 
 @router.get(
+    "/unbooked", status_code=status.HTTP_200_OK, response_model=list[RoomPublic]
+)
+async def get_unbooked_rooms(session: SessionDep):
+    statement = select(Room).where(
+        ~exists(select(Booking).where(Booking.room_id == Room.id))
+    )
+    result = await session.exec(statement)
+    return result.all()
+
+
+@router.get(
     "/{room_id}",
     status_code=status.HTTP_200_OK,
     response_model=RoomPublic,
