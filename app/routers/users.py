@@ -5,7 +5,8 @@ from sqlmodel import select
 from app.dependencies.database import SessionDep
 from app.dependencies.users import UserDep, UserId
 from app.errors import USER_NOT_FOUND
-from app.models.booking import BookingPublic
+from app.models.booking import Booking, BookingPublic
+from app.models.room import Room, RoomPublic
 from app.models.user import User, UserBase, UserPublic
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -41,3 +42,17 @@ async def get_user_bookings(session: SessionDep, user_id: UserId):
     if not user:
         raise USER_NOT_FOUND
     return user.bookings
+
+
+@router.get(
+    "/{user_id}/rooms", status_code=status.HTTP_200_OK, response_model=list[RoomPublic]
+)
+async def get_user_rooms(session: SessionDep, user: UserDep):
+    statement = (
+        select(Room)
+        .join(Booking, Booking.room_id == Room.id)
+        .where(Booking.user_id == user.id)
+        .distinct()
+    )
+    result = await session.exec(statement)
+    return result.all()
