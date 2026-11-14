@@ -7,7 +7,7 @@ from fastapi import (
     status,
 )
 from pydantic import BaseModel, Field, StringConstraints, field_validator
-from sqlmodel import col, exists, select
+from sqlmodel import col, exists, func, select
 
 from app.dependencies.database import SessionDep
 from app.dependencies.rooms import RoomDep
@@ -105,6 +105,27 @@ async def get_unbooked_rooms(session: SessionDep):
     )
     result = await session.exec(statement)
     return result.all()
+
+
+class RoomWithBookingCount(RoomPublic):
+    booking_count: int
+
+
+@router.get(
+    "/stats", status_code=status.HTTP_200_OK, response_model=list[RoomWithBookingCount]
+)
+async def get_room_stats(session: SessionDep):
+    statement = (
+        select(Room, func.count(Booking.id).label("booking_count"))
+        .outerjoin(Booking, Booking.room_id == Room.id)
+        .group_by(Room.id)
+        .order_by(Room.id)
+    )
+    result = await session.exec(statement)
+    return [
+        RoomWithBookingCount(**room.dict(), booking_count=booking_count)
+        for room, booking_count in result.all()
+    ]
 
 
 @router.get(
