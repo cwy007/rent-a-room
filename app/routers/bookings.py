@@ -1,9 +1,10 @@
 from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Path, status
+from fastapi import APIRouter, Path, status
 from sqlalchemy.orm import joinedload
 
 from app.dependencies.database import SessionDep
+from app.errors import BOOKING_NOT_FOUND, ROOM_NOT_FOUND, USER_NOT_FOUND
 from app.models.booking import (
     Booking,
     BookingBase,
@@ -21,14 +22,10 @@ router = APIRouter(prefix="/bookings", tags=["bookings"])
 async def create_booking(session: SessionDep, booking: BookingBase):
     room = await session.get(Room, booking.room_id)
     if not room:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Room not found"
-        )
+        raise ROOM_NOT_FOUND
     user = await session.get(User, booking.user_id)
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
-        )
+        raise USER_NOT_FOUND
     validated_booking = Booking.model_validate(booking)
     session.add(validated_booking)
     await session.commit()
@@ -46,7 +43,5 @@ async def get_booking(session: SessionDep, booking_id: Annotated[int, Path(ge=1)
         options=[joinedload(Booking.room), joinedload(Booking.user)],
     )
     if not booking:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Booking not found"
-        )
+        raise BOOKING_NOT_FOUND
     return booking
