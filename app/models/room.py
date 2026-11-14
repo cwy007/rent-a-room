@@ -22,7 +22,7 @@ class Room(RoomBase, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
 
-    bookings: list["Booking"] = Relationship(back_populates="room")
+    bookings: list["Booking"] = Relationship(back_populates="room", cascade_delete=True)
 
 
 # 房间响应模型 - 用于返回给客户端的房间信息

@@ -117,6 +117,6 @@ async def update_room(session: SessionDep, room: RoomDep, room_payload: RoomUpda
     dependencies=[Depends(check_maintenance_mode)],
 )
 async def delete_room(session: SessionDep, room: RoomDep):
-    session.delete(room)
+    await session.delete(room)
     await session.commit()
     return room
